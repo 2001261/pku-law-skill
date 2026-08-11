@@ -1,6 +1,6 @@
 ---
 name: pku-law
-description: 北大法宝 MCP 积分助手：每日签到领取积分、积分余额管理（浏览器自动化，不含任何非公开接口）
+description: 北大法宝 MCP 积分助手：每日签到领取积分、积分余额管理（浏览器登录 + 官方 Web API，不含任何非公开接口）
 metadata:
   audience: developers
   workflow: points-management
@@ -51,9 +51,14 @@ pku-law/
 
 ## 一、每日签到领取积分
 
-`scripts/claim_daily_points.py` 用 Playwright 拉起真实浏览器打开官方积分页
-[console/points](https://mcp.pkulaw.com/console/points)，模拟你本人点击「领取」——
-不调用任何非公开接口，登录态就是你浏览器里的登录态。
+`scripts/claim_daily_points.py` 采用混合架构：
+
+1. **浏览器只负责登录**——用 Playwright 拉起真实浏览器，首次手动登录一次法宝账号，
+   会话保存在本地 profile（`~/.pkulaw/browser-profile`）后复用；
+2. **操作走官方 Web API**——从页面 localStorage 读取网页前端自己保存的访问令牌，
+   用 requests 调用积分接口（与网页前端完全一致），返回结构化 JSON。
+
+不模拟点击、不怕页面文案改版，不含任何密钥、密码加密或签名算法。
 
 ```bash
 pip install -r requirements.txt
@@ -62,17 +67,17 @@ playwright install chromium
 # 首次运行：在弹出的浏览器窗口里手动登录一次法宝账号
 python3 scripts/claim_daily_points.py
 
-# 登录态保存后（~/.pkulaw/browser-profile），可无头运行，适合定时任务
+# 登录态保存后，可无头运行，适合定时任务
 python3 scripts/claim_daily_points.py --headless
 
 # 只查看积分余额，不执行领取
 python3 scripts/claim_daily_points.py --status
 
-# 自动点击失效时（官方页面改版），退回纯手动模式
+# 自动流程失效时，退回纯手动模式
 python3 scripts/claim_daily_points.py --manual
 ```
 
-脚本执行后会顺带打印页面上的积分余额信息。
+脚本执行后会打印积分概览（剩余积分、本月消耗、过期倒计时等）。
 定时签到可自行配置系统定时任务（cron / 任务计划程序），每天执行一次即可。
 
 ---
