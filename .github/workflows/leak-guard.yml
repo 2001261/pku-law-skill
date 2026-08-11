@@ -1,0 +1,13 @@
+name: leak-guard
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 扫描私有密钥/逆向特征串
+        run: python3 scripts/check_no_private_material.py
