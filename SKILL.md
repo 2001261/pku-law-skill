@@ -82,7 +82,15 @@ python3 scripts/claim_daily_points.py --manual
 ```
 
 脚本执行后会打印积分概览（剩余积分、本月消耗、过期倒计时等）。
-定时签到可自行配置系统定时任务（cron / 任务计划程序），每天执行一次即可。
+定时签到可自行配置系统定时任务，每天执行一次即可。
+
+### 跨平台说明（Linux / macOS / Windows）
+
+- 脚本与依赖（playwright、requests、git）三平台通用，Python ≥ 3.10。
+- 命令中的 `python3` 在 Windows 上换成 `python`（或 `py`）。
+- 浏览器首次登录三个平台流程一致；登录态文件位置都在 skill 目录 `data/` 下。
+- 定时任务：Linux/macOS 用 cron，Windows 用「任务计划程序」，
+  均执行 `python3 scripts/claim_daily_points.py`（Windows 用 `python`）。
 
 ---
 

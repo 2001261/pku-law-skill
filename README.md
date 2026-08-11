@@ -26,6 +26,7 @@ pip install -r requirements.txt && playwright install chromium
 python3 scripts/claim_daily_points.py   # 首次在弹出窗口中手动登录一次
 ```
 
+支持 Linux / macOS / Windows（Windows 上命令用 `python` 替代 `python3`）。
 详见 `SKILL.md`。法规/案例检索不在本 skill 范围内，请使用北大法宝官方 MCP。
 
 ## 说明

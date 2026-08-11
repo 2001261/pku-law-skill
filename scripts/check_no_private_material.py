@@ -34,6 +34,13 @@ SKIP_FILES = {Path(__file__).resolve()}
 
 
 def main() -> int:
+    # Windows 控制台默认 GBK，输出 ✓/✗ 会 UnicodeEncodeError，强制 UTF-8
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError):
+            pass
+
     offenders: list[str] = []
     for path in sorted(REPO_ROOT.rglob("*")):
         if not path.is_file() or path.resolve() in SKIP_FILES:

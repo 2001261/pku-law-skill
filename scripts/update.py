@@ -23,14 +23,25 @@ REPO_URL = "https://github.com/2001261/pku-law-skill.git"
 
 def _git(*args: str) -> str:
     r = subprocess.run(
-        ["git", *args], cwd=SKILL_ROOT, capture_output=True, text=True
+        ["git", *args], cwd=SKILL_ROOT, capture_output=True,
+        text=True, encoding="utf-8", errors="replace",  # Windows 默认 GBK，git 输出是 UTF-8
     )
     if r.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)} 失败: {r.stderr.strip()}")
     return r.stdout.strip()
 
 
+def _fix_console_encoding() -> None:
+    """Windows 控制台默认 GBK，输出 ✓/→ 等符号会 UnicodeEncodeError，强制 UTF-8。"""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError):
+            pass
+
+
 def main() -> int:
+    _fix_console_encoding()
     if not (SKILL_ROOT / ".git").exists():
         print("[!] 当前 skill 不是 git clone 安装，无法自更新。")
         print(f"    请改用 clone 安装：git clone {REPO_URL} pku-law")

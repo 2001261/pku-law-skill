@@ -382,7 +382,17 @@ def _open_manual_page() -> int:
             ctx.close()
 
 
+def _fix_console_encoding() -> None:
+    """Windows 控制台默认 GBK，输出 ✓/✗ 等符号会 UnicodeEncodeError，强制 UTF-8。"""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError):
+            pass
+
+
 def main() -> int:
+    _fix_console_encoding()
     parser = argparse.ArgumentParser(
         description="北大法宝 MCP 每日积分领取（首次浏览器登录，后续免浏览器复用会话）"
     )
