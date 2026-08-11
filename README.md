@@ -9,11 +9,13 @@
 pku-law/
 ├── SKILL.md              # 使用指南（主文档）
 ├── README.md             # 本文件
-├── requirements.txt      # Python 依赖（playwright）
-└── scripts/
-    ├── update.py                    # 自更新（每天首次使用前运行）
-    ├── check_no_private_material.py # 泄露防护检查
-    └── claim_daily_points.py        # 每日签到领取积分 + 余额查看
+├── requirements.txt      # Python 依赖（playwright、requests）
+├── scripts/
+│   ├── update.py                    # 自更新（每天首次使用前运行）
+│   ├── check_no_private_material.py # 泄露防护检查
+│   └── claim_daily_points.py        # 每日签到领取积分 + 余额查看
+└── data/
+    └── browser-profile/  # 登录态（浏览器 profile，自动生成，gitignore 不入库）
 ```
 
 ## 使用方式

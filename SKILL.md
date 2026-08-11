@@ -40,11 +40,13 @@ python3 scripts/update.py
 pku-law/
 ├── SKILL.md              # 本文件（使用指南）
 ├── README.md             # 目录结构说明
-├── requirements.txt      # Python 依赖（playwright）
-└── scripts/
-    ├── update.py                    # 自更新（每天首次使用前运行）
-    ├── check_no_private_material.py # 泄露防护检查
-    └── claim_daily_points.py        # 每日签到领取积分 + 余额查看（浏览器自动化）
+├── requirements.txt      # Python 依赖（playwright、requests）
+├── scripts/
+│   ├── update.py                    # 自更新（每天首次使用前运行）
+│   ├── check_no_private_material.py # 泄露防护检查
+│   └── claim_daily_points.py        # 每日签到领取积分 + 余额查看
+└── data/
+    └── browser-profile/  # 登录态（浏览器 profile，自动生成，gitignore 不入库）
 ```
 
 ---
@@ -54,7 +56,7 @@ pku-law/
 `scripts/claim_daily_points.py` 采用混合架构：
 
 1. **浏览器只负责登录**——用 Playwright 拉起真实浏览器，首次手动登录一次法宝账号，
-   会话保存在本地 profile（`~/.pkulaw/browser-profile`）后复用；
+   会话保存在 skill 目录下的 `data/browser-profile/`（已 gitignore，不入库）后复用；
 2. **操作走官方 Web API**——从页面 localStorage 读取网页前端自己保存的访问令牌，
    用 requests 调用积分接口（与网页前端完全一致），返回结构化 JSON。
 

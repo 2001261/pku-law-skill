@@ -29,7 +29,11 @@ from pathlib import Path
 
 POINTS_URL = "https://mcp.pkulaw.com/console/points"
 GATEWAY = "https://gateway.pkulaw.com"
-DEFAULT_PROFILE = Path.home() / ".pkulaw" / "browser-profile"
+
+SKILL_ROOT = Path(__file__).resolve().parents[1]
+# 登录态（浏览器 profile）保存在 skill 目录下管理，已 gitignore，不会入库
+DEFAULT_PROFILE = SKILL_ROOT / "data" / "browser-profile"
+_LEGACY_PROFILE = Path.home() / ".pkulaw" / "browser-profile"
 
 # 页面文案为启发式匹配，仅用于判定登录态；官方页面改版后可能需要调整
 CLAIM_PATTERN = re.compile(r"领取|签到|claim", re.I)
@@ -254,6 +258,17 @@ def run_status_flow(page) -> int:
     return 0
 
 
+def _migrate_profile(profile: Path) -> None:
+    """一次性迁移：旧默认位置（~/.pkulaw/browser-profile）的会话搬到 skill 目录。"""
+    if profile.exists() or not _LEGACY_PROFILE.exists():
+        return
+    import shutil
+
+    profile.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(_LEGACY_PROFILE, profile)
+    print(f"[i] 已将登录态从 {_LEGACY_PROFILE} 迁移到 {profile}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="北大法宝 MCP 每日积分领取（浏览器登录 + 官方 Web API）")
     parser.add_argument("--headless", action="store_true", help="无头模式（需已登录过）")
@@ -269,6 +284,8 @@ def main() -> int:
         print("[✗] 缺少依赖，请先执行：pip install playwright && playwright install chromium")
         return 1
 
+    if args.profile == DEFAULT_PROFILE:
+        _migrate_profile(args.profile)
     args.profile.mkdir(parents=True, exist_ok=True)
 
     with sync_playwright() as pw:
