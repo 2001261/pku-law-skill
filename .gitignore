@@ -1,4 +1,4 @@
 __pycache__/
 *.pyc
-browser-profile/
+data/
 .DS_Store

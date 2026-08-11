@@ -45,22 +45,24 @@ pku-law/
 │   ├── update.py                    # 自更新（每天首次使用前运行）
 │   ├── check_no_private_material.py # 泄露防护检查
 │   └── claim_daily_points.py        # 每日签到领取积分 + 余额查看
-└── data/
-    └── browser-profile/  # 登录态（浏览器 profile，自动生成，gitignore 不入库）
+└── data/                 # 登录态（自动生成，gitignore 不入库）
+    ├── session.json      #   会话令牌（权限 600，免浏览器复用）
+    └── browser-profile/  #   浏览器 profile（首次登录/兜底用）
 ```
 
 ---
 
 ## 一、每日签到领取积分
 
-`scripts/claim_daily_points.py` 采用混合架构：
+`scripts/claim_daily_points.py` 的工作方式：
 
-1. **浏览器只负责登录**——用 Playwright 拉起真实浏览器，首次手动登录一次法宝账号，
-   会话保存在 skill 目录下的 `data/browser-profile/`（已 gitignore，不入库）后复用；
-2. **操作走官方 Web API**——从页面 localStorage 读取网页前端自己保存的访问令牌，
-   用 requests 调用积分接口（与网页前端完全一致），返回结构化 JSON。
+1. **首次运行拉起浏览器**，手动登录一次法宝账号；
+2. 从页面读取网页前端自己保存的访问令牌，存入 `data/session.json`（权限 600，已 gitignore）；
+3. **后续运行免浏览器**：直接用 requests 携带保存的令牌调积分接口
+   （与网页前端完全一致的官方 Web API，返回 JSON）；令牌过期自动换新；
+4. 会话彻底失效时才再次拉起浏览器重新登录。
 
-不模拟点击、不怕页面文案改版，不含任何密钥、密码加密或签名算法。
+不含任何密钥、密码加密或签名算法。
 
 ```bash
 pip install -r requirements.txt
@@ -69,8 +71,8 @@ playwright install chromium
 # 首次运行：在弹出的浏览器窗口里手动登录一次法宝账号
 python3 scripts/claim_daily_points.py
 
-# 登录态保存后，可无头运行，适合定时任务
-python3 scripts/claim_daily_points.py --headless
+# 之后每次运行都是免浏览器的（session.json 复用）
+python3 scripts/claim_daily_points.py
 
 # 只查看积分余额，不执行领取
 python3 scripts/claim_daily_points.py --status

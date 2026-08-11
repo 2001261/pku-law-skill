@@ -14,8 +14,9 @@ pku-law/
 │   ├── update.py                    # 自更新（每天首次使用前运行）
 │   ├── check_no_private_material.py # 泄露防护检查
 │   └── claim_daily_points.py        # 每日签到领取积分 + 余额查看
-└── data/
-    └── browser-profile/  # 登录态（浏览器 profile，自动生成，gitignore 不入库）
+└── data/                 # 登录态（自动生成，gitignore 不入库）
+    ├── session.json      #   会话令牌（权限 600，免浏览器复用）
+    └── browser-profile/  #   浏览器 profile（首次登录/兜底用）
 ```
 
 ## 使用方式
