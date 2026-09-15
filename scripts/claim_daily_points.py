@@ -264,16 +264,19 @@ def _normalize_pasted_token(raw: str) -> str | None:
 
 def _prompt_token_login() -> dict | None:
     """手动粘贴 token 登录：无 Playwright 环境（如鸿蒙）的登录路径。"""
-    print("[i] 手动登录：需要粘贴浏览器登录后页面保存的 wso2_token。")
-    print("    获取方法（任选其一）：")
-    print("    · 电脑浏览器：登录 https://mcp.pkulaw.com/console/points ，F12 打开控制台，")
-    print("      执行  copy(localStorage.getItem('wso2_token'))  后粘贴（refresh 同理）。")
-    print("    · 手机/鸿蒙浏览器：登录同一页面后，新建书签并把网址改为")
-    print("      javascript:prompt('',localStorage.getItem('wso2_token'))")
-    print("      回到积分页点开该书签即可复制 token。")
+    print("[i] 手动登录：粘贴浏览器登录官方页面后保存的 wso2_token。")
+    print("    获取方法（详细图文步骤见 SKILL.md「如何获取 token」）：")
+    print("    · 电脑浏览器：登录 https://mcp.pkulaw.com/console/points ，F12 打开")
+    print("      控制台，执行 copy(localStorage.getItem('wso2_token')) 后粘贴；")
+    print("      wso2_refresh_token 同理（Chrome 首次粘贴需先输入「允许粘贴」）。")
+    print("    · 手机/鸿蒙浏览器（书签法）：登录同一页面后收藏书签，把书签网址改为")
+    print("      javascript:prompt('wso2_token',localStorage.getItem('wso2_token'))")
+    print("      回到积分页点开该书签，从弹窗复制 token。")
+    print("    · 也可以把其他设备上已登录生成的 data/session.json 直接拷到本机 data/。")
+    print("    注意：两个 token 都粘。access 一两天过期，refresh 长效，脚本靠它自动续期。")
     try:
         access = _normalize_pasted_token(input("    wso2_token: "))
-        refresh = _normalize_pasted_token(input("    wso2_refresh_token（可留空）: "))
+        refresh = _normalize_pasted_token(input("    wso2_refresh_token（强烈建议填写）: "))
     except (EOFError, KeyboardInterrupt):
         print()
         return None

@@ -90,6 +90,52 @@ python3 scripts/claim_daily_points.py --manual
 脚本执行后会打印积分概览（剩余积分、本月消耗、过期倒计时等）。
 定时签到可自行配置系统定时任务，每天执行一次即可。
 
+### 如何获取 token（手动登录，逐步操作）
+
+登录态就是法宝官方页面登录后，网页前端自己存进浏览器 localStorage 的
+`wso2_token` / `wso2_refresh_token`。只是读取你自己浏览器的数据，不涉及任何破解。
+粘贴时带引号或 JSON 包装都能自动识别。
+
+**方法一：电脑浏览器（推荐，约 1 分钟）**
+
+1. 用 Chrome / Edge / Firefox 打开 <https://mcp.pkulaw.com/console/points> ，登录法宝账号；
+2. 登录成功后按 `F12` 打开开发者工具，切到「控制台 / Console」；
+3. 输入以下命令回车，token 即复制到剪贴板：
+   ```js
+   copy(localStorage.getItem('wso2_token'))
+   ```
+   （Chrome 首次向控制台粘贴代码，需按提示先手动输入「允许粘贴 / allow pasting」）
+4. 再执行 `copy(localStorage.getItem('wso2_refresh_token'))` 复制 refresh token；
+5. 运行 `python3 scripts/claim_daily_points.py --login`，依次粘贴两个 token。
+
+**方法二：手机 / 鸿蒙浏览器（书签法）**
+
+手机浏览器没有控制台，用 bookmarklet 代替：
+
+1. 浏览器打开 <https://mcp.pkulaw.com/console/points> 并登录；
+2. 把当前页收藏为书签，然后编辑这个书签，把**网址**改成：
+   ```
+   javascript:prompt('wso2_token',localStorage.getItem('wso2_token'))
+   ```
+3. 回到积分页面，点开这个书签，弹窗里显示的就是 token，长按复制；
+4. 把书签网址里的字段名换成 `wso2_refresh_token`，同样再取一次；
+   （部分第三方浏览器会过滤 `javascript:` 书签，换系统自带浏览器即可）
+5. 在设备上运行 `--login` 依次粘贴。
+
+**方法三：session.json 文件搬运（多设备用户）**
+
+任何一台设备上 `--login` 成功后，登录态就保存在 `data/session.json`。
+直接把这个文件拷到目标设备的 skill `data/` 目录下，效果等同于粘贴登录。
+
+**注意事项**
+
+- **两个 token 都要粘**：access_token 一两天就过期，脚本靠长效的 refresh_token
+  自动续期；只粘 access 的话过期后要重新手动获取。
+- token 等于登录态，与账号密码同级，不要发给他人、不要提交进 git
+  （`data/` 目录已 gitignore）。
+- 官方 MCP Access Token（[console/apps](https://mcp.pkulaw.com/console/apps) 获取）
+  与签到所需的 wso2_token 是**两套鉴权**，不能互相替代；签到只认 wso2_token。
+
 ### 跨平台说明（Linux / macOS / Windows / 鸿蒙）
 
 - 日常签到只需 requests，三平台通用，Python ≥ 3.10。
@@ -110,3 +156,5 @@ python3 scripts/claim_daily_points.py --manual
 - 积分用途：官方法宝 MCP 检索按次消耗积分，余额不足时回到该页面领取次日积分。
 - Access Token 的获取/新建在官方页面
   [console/apps](https://mcp.pkulaw.com/console/apps) 自助完成。
+  注意：该 Access Token 仅供官方 MCP 检索使用，与签到登录用的
+  wso2_token 是两套鉴权，不能用来签到（已实测验证）。
