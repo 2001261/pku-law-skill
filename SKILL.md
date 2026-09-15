@@ -88,7 +88,16 @@ python3 scripts/claim_daily_points.py --manual
 ```
 
 脚本执行后会打印积分概览（剩余积分、本月消耗、过期倒计时等）。
-定时签到可自行配置系统定时任务，每天执行一次即可。
+
+### 定时签到（每天 00:00:01）
+
+领取时间要求：**每天 00:00:01 执行一次**
+`python3 scripts/claim_daily_points.py`。
+
+本 skill **不附带各系统的 cron/定时任务配置**。需要定时签到时，由 agent
+根据该时间要求、当前操作系统与环境自行创建合适的定时任务（如 Linux 的
+cron、macOS 的 launchd/cron、Windows 的任务计划程序、鸿蒙的系统定时能力等），
+创建后验证任务已生效再告知用户。
 
 ### 如何获取 token（手动登录，逐步操作）
 
@@ -151,8 +160,8 @@ python3 scripts/claim_daily_points.py --manual
   之后与桌面平台一样免浏览器运行。
 - 命令中的 `python3` 在 Windows 上换成 `python`（或 `py`）。
 - Playwright 浏览器登录三个桌面平台流程一致；登录态文件位置都在 skill 目录 `data/` 下。
-- 定时任务：Linux/macOS 用 cron，Windows 用「任务计划程序」，鸿蒙用系统定时能力，
-  均执行 `python3 scripts/claim_daily_points.py`（Windows 用 `python`）。
+- 定时任务不写死实现：由 agent 按「每天 00:00:01」的要求结合当前系统与环境
+  自行创建（见上节「定时签到」）。
 
 ---
 
