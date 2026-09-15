@@ -1,26 +1,29 @@
 #!/usr/bin/env python3
-"""北大法宝 MCP 每日积分领取助手（首次浏览器登录，后续免浏览器复用会话）。
+"""北大法宝 MCP 每日积分领取助手（requests 为主，Playwright 仅作可选兜底）。
 
 工作原理：
-  1. 首次运行用 Playwright 拉起真实浏览器，手动登录一次法宝账号；
-  2. 从页面 localStorage 读取网页前端自己保存的 wso2_token / wso2_refresh_token，
-     存入 skill 目录 data/session.json（权限 600，已 gitignore）；
+  1. 登录态只有两个来源，均为用户自有浏览器的会话：
+     a) --login 手动粘贴 wso2_token / wso2_refresh_token（任意设备任意浏览器均可，
+        适用于鸿蒙等无 Playwright 组件的环境）；
+     b) 已安装 Playwright 时，自动拉起浏览器引导登录并从页面 localStorage 提取；
+  2. 会话存入 skill 目录 data/session.json（权限 600，已 gitignore）；
   3. 后续运行不再启动浏览器：直接用 requests 携带保存的 token 调积分接口
      （与网页前端完全一致的官方 Web API，返回 JSON）；
-     access_token 过期时用 refresh_token 自动换新并落盘；
-  4. 会话彻底失效（refresh_token 也过期）时才再次拉起浏览器重新登录。
+     access_token 过期时用 refresh_token 自动换新并落盘。
 
-不含任何密钥、密码加密或签名算法。
+不含任何密钥、密码加密或签名算法；不实现账号密码登录（requests 即可，
+但那不是本工具的职责）。
 
 依赖：
-    pip install playwright requests
-    playwright install chromium
+    pip install requests            # 必需
+    pip install playwright && playwright install chromium   # 可选，仅浏览器兜底用
 
 用法：
     python3 scripts/claim_daily_points.py            # 领取今日积分
     python3 scripts/claim_daily_points.py --status   # 只查看积分余额
+    python3 scripts/claim_daily_points.py --login    # 手动粘贴 token 登录（免浏览器）
     python3 scripts/claim_daily_points.py --headless # 无头模式（需已登录过）
-    python3 scripts/claim_daily_points.py --manual   # 只打开页面，完全手动操作
+    python3 scripts/claim_daily_points.py --manual   # 只打开页面，完全手动操作（需 Playwright）
 """
 
 from __future__ import annotations
@@ -246,6 +249,52 @@ def extract_session(page, timeout_s: int = 15) -> dict | None:
     return None
 
 
+def _normalize_pasted_token(raw: str) -> str | None:
+    """清洗手动粘贴的 token：去空白/引号，兼容 JSON 包装（{"data": "..."}）。"""
+    raw = raw.strip().strip('"').strip("'")
+    if not raw:
+        return None
+    if raw.startswith("{"):
+        try:
+            raw = json.loads(raw).get("data") or ""
+        except json.JSONDecodeError:
+            return None
+    return raw if raw.startswith("eyJ") else None
+
+
+def _prompt_token_login() -> dict | None:
+    """手动粘贴 token 登录：无 Playwright 环境（如鸿蒙）的登录路径。"""
+    print("[i] 手动登录：需要粘贴浏览器登录后页面保存的 wso2_token。")
+    print("    获取方法（任选其一）：")
+    print("    · 电脑浏览器：登录 https://mcp.pkulaw.com/console/points ，F12 打开控制台，")
+    print("      执行  copy(localStorage.getItem('wso2_token'))  后粘贴（refresh 同理）。")
+    print("    · 手机/鸿蒙浏览器：登录同一页面后，新建书签并把网址改为")
+    print("      javascript:prompt('',localStorage.getItem('wso2_token'))")
+    print("      回到积分页点开该书签即可复制 token。")
+    try:
+        access = _normalize_pasted_token(input("    wso2_token: "))
+        refresh = _normalize_pasted_token(input("    wso2_refresh_token（可留空）: "))
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return None
+    if not access:
+        print("[✗] access_token 为空或格式不对（应以 eyJ 开头）。")
+        return None
+
+    sess = {"access_token": access, "refresh_token": refresh}
+    try:
+        PointsApi(access).daily()  # 验证 token 有效
+    except ApiError as e:
+        if e.status == 401 and refresh:
+            new_sess = refresh_session(sess)
+            if new_sess:
+                print("[i] access_token 已过期，已用 refresh_token 换新。")
+                return new_sess
+        print(f"[✗] token 无效（{e}），请重新获取后再试。")
+        return None
+    return sess
+
+
 # ── 业务流程 ────────────────────────────────────────────────────
 
 # 积分概览中值得每日关注的核心字段（其余字段太啰嗦，不逐日打印）
@@ -394,16 +443,32 @@ def _fix_console_encoding() -> None:
 def main() -> int:
     _fix_console_encoding()
     parser = argparse.ArgumentParser(
-        description="北大法宝 MCP 每日积分领取（首次浏览器登录，后续免浏览器复用会话）"
+        description="北大法宝 MCP 每日积分领取（requests 为主，Playwright 仅可选兜底）"
     )
     parser.add_argument("--headless", action="store_true",
                         help="无头模式（仅浏览器兜底路径生效；有保存会话时无需浏览器）")
-    parser.add_argument("--manual", action="store_true", help="只打开积分页，完全手动操作")
+    parser.add_argument("--manual", action="store_true",
+                        help="只打开积分页，完全手动操作（需 Playwright）")
     parser.add_argument("--status", action="store_true", help="只查看积分余额，不执行领取")
+    parser.add_argument("--login", action="store_true",
+                        help="手动粘贴 token 登录（无需 Playwright，鸿蒙等环境适用）")
     args = parser.parse_args()
 
     if args.manual:
         return _open_manual_page()
+
+    # 手动粘贴 token 登录：无 Playwright 环境的登录路径
+    if args.login:
+        sess = _prompt_token_login()
+        if not sess:
+            return 1
+        save_session(sess)
+        print("[✓] 登录成功，会话已保存，以后免浏览器复用。")
+        api = PointsApi(sess["access_token"])
+        if args.status:
+            print_overview(api)
+            return 0
+        return run_claim_flow(api)
 
     # 路径一：已保存会话，免浏览器
     sess = load_session()
@@ -421,8 +486,11 @@ def main() -> int:
             return run_claim_flow(api)
         print("[i] 保存的会话已失效，改用浏览器重新登录。")
 
-    # 路径二：浏览器登录并保存会话
+    # 路径二：Playwright 浏览器登录（未安装时会打印提示并返回 None）
     sess = _browser_login_and_extract(headless=args.headless)
+    # 路径三：手动粘贴 token（鸿蒙等无 Playwright 环境的兜底）
+    if not sess:
+        sess = _prompt_token_login()
     if not sess:
         print("[✗] 未能获取登录会话。")
         return 1

@@ -22,11 +22,14 @@ pku-law/
 ## 使用方式
 
 ```bash
-pip install -r requirements.txt && playwright install chromium
-python3 scripts/claim_daily_points.py   # 首次在弹出窗口中手动登录一次
+pip install -r requirements.txt   # 仅 requests；Playwright 为可选依赖
+python3 scripts/claim_daily_points.py --login   # 手动粘贴 token 登录（鸿蒙等无 Playwright 环境）
+# 或已装 Playwright 时直接运行，首次在弹出窗口中手动登录一次：
+python3 scripts/claim_daily_points.py
 ```
 
-支持 Linux / macOS / Windows（Windows 上命令用 `python` 替代 `python3`）。
+支持 Linux / macOS / Windows / 鸿蒙（Windows 上命令用 `python` 替代 `python3`；
+鸿蒙环境请勿安装 playwright，用 `--login` 登录）。
 详见 `SKILL.md`。法规/案例检索不在本 skill 范围内，请使用北大法宝官方 MCP。
 
 ## 说明
