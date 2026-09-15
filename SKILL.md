@@ -104,7 +104,14 @@ python3 scripts/claim_daily_points.py --manual
    ```js
    copy(localStorage.getItem('wso2_token'))
    ```
-   （Chrome 首次向控制台粘贴代码，需按提示先手动输入「允许粘贴 / allow pasting」）
+   **如果控制台拒绝粘贴代码**：Chrome/Edge 首次向控制台粘贴会弹出安全警告——
+   > Warning: Don't paste code into the DevTools Console that you don't understand or
+   > haven't reviewed yourself. This could allow attackers to steal your identity or
+   > take control of your computer. Type "allow pasting" below and press Enter to allow pasting.
+
+   按提示**手动键入** `allow pasting` 回车，再重新粘贴命令即可（该警告是浏览器的
+   防社工粘贴保护，只需解除一次）。其他浏览器控制台若同样无法输入/粘贴指令，
+   请留意是否有类似提示，按其要求解除后再执行。
 4. 再执行 `copy(localStorage.getItem('wso2_refresh_token'))` 复制 refresh token；
 5. 运行 `python3 scripts/claim_daily_points.py --login`，依次粘贴两个 token。
 
