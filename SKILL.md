@@ -62,10 +62,11 @@ pku-law/
 
 `scripts/claim_daily_points.py` 的工作方式：
 
-1. **登录态来自用户自己的浏览器会话**，两种获取方式：
-   - `--login` 手动粘贴 `wso2_token`（任意设备任意浏览器均可，
-     鸿蒙等无 Playwright 组件的环境用这种方式）；
-   - 已安装 Playwright 时，自动拉起浏览器引导登录并从页面提取令牌；
+1. **登录态来自用户自己的浏览器会话**，获取优先级：
+   - **有 Playwright（桌面环境首选）**：自动拉起浏览器引导登录，
+     登录成功后自动从页面提取令牌保存；
+   - **无 Playwright（鸿蒙等环境的兜底）**：`--login` 手动粘贴 `wso2_token`
+     （任意设备任意浏览器取到后粘进来即可）；
 2. 令牌存入 `data/session.json`（权限 600，已 gitignore）；
 3. **日常运行免浏览器**：直接用 requests 携带保存的令牌调积分接口
    （与网页前端完全一致的官方 Web API，返回 JSON）；令牌过期自动换新；
@@ -75,13 +76,13 @@ pku-law/
 
 ```bash
 pip install -r requirements.txt   # 仅 requests；Playwright 为可选依赖
-# 可选（浏览器自动登录兜底用）：pip install playwright && playwright install chromium
+# 可选（浏览器自动登录，桌面环境推荐）：pip install playwright && playwright install chromium
 
-# 登录方式一（鸿蒙/无 Playwright 环境）：手动粘贴 token
-python3 scripts/claim_daily_points.py --login
-
-# 登录方式二（有 Playwright）：首次运行在弹出的浏览器窗口里手动登录一次
+# 登录方式一（有 Playwright，首选）：首次运行在弹出的浏览器窗口里手动登录一次
 python3 scripts/claim_daily_points.py
+
+# 登录方式二（鸿蒙/无 Playwright 环境）：手动粘贴 token
+python3 scripts/claim_daily_points.py --login
 
 # 之后每次运行都是免浏览器的（session.json 复用）
 python3 scripts/claim_daily_points.py

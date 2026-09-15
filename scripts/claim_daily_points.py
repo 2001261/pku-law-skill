@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""北大法宝 MCP 每日积分领取助手（requests 为主，Playwright 仅作可选兜底）。
+"""北大法宝 MCP 每日积分领取助手（登录优先 Playwright 自动化，无则手动粘贴 token）。
 
 工作原理：
-  1. 登录态只有两个来源，均为用户自有浏览器的会话：
-     a) --login 手动粘贴 wso2_token / wso2_refresh_token（任意设备任意浏览器均可，
-        适用于鸿蒙等无 Playwright 组件的环境）；
-     b) 已安装 Playwright 时，自动拉起浏览器引导登录并从页面 localStorage 提取；
+  1. 登录态来自用户自有浏览器的会话，获取优先级：
+     a) 已安装 Playwright 时（桌面环境首选）：自动拉起浏览器引导登录，
+        从页面 localStorage 提取 wso2_token / wso2_refresh_token；
+     b) 无 Playwright 组件的环境（如鸿蒙）：--login 手动粘贴 token 兜底，
+        任意设备任意浏览器取到后粘进来即可；
   2. 会话存入 skill 目录 data/session.json（权限 600，已 gitignore）；
-  3. 后续运行不再启动浏览器：直接用 requests 携带保存的 token 调积分接口
+  3. 日常运行免浏览器：直接用 requests 携带保存的 token 调积分接口
      （与网页前端完全一致的官方 Web API，返回 JSON）；
      access_token 过期时用 refresh_token 自动换新并落盘。
 
@@ -16,12 +17,12 @@
 
 依赖：
     pip install requests            # 必需
-    pip install playwright && playwright install chromium   # 可选，仅浏览器兜底用
+    pip install playwright && playwright install chromium   # 可选，浏览器自动登录用
 
 用法：
     python3 scripts/claim_daily_points.py            # 领取今日积分
     python3 scripts/claim_daily_points.py --status   # 只查看积分余额
-    python3 scripts/claim_daily_points.py --login    # 手动粘贴 token 登录（免浏览器）
+    python3 scripts/claim_daily_points.py --login    # 手动粘贴 token 登录（无 Playwright 时）
     python3 scripts/claim_daily_points.py --headless # 无头模式（需已登录过）
     python3 scripts/claim_daily_points.py --manual   # 只打开页面，完全手动操作（需 Playwright）
 """
@@ -447,7 +448,7 @@ def _fix_console_encoding() -> None:
 def main() -> int:
     _fix_console_encoding()
     parser = argparse.ArgumentParser(
-        description="北大法宝 MCP 每日积分领取（requests 为主，Playwright 仅可选兜底）"
+        description="北大法宝 MCP 每日积分领取（登录优先 Playwright 自动化，无则手动粘贴 token）"
     )
     parser.add_argument("--headless", action="store_true",
                         help="无头模式（仅浏览器兜底路径生效；有保存会话时无需浏览器）")

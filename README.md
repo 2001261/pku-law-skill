@@ -23,9 +23,10 @@ pku-law/
 
 ```bash
 pip install -r requirements.txt   # 仅 requests；Playwright 为可选依赖
-python3 scripts/claim_daily_points.py --login   # 手动粘贴 token 登录（鸿蒙等无 Playwright 环境）
-# 或已装 Playwright 时直接运行，首次在弹出窗口中手动登录一次：
+# 已装 Playwright 时直接运行（首选），首次在弹出窗口中手动登录一次：
 python3 scripts/claim_daily_points.py
+# 无 Playwright 环境（如鸿蒙）则手动粘贴 token 登录：
+python3 scripts/claim_daily_points.py --login
 ```
 
 支持 Linux / macOS / Windows / 鸿蒙（Windows 上命令用 `python` 替代 `python3`；
