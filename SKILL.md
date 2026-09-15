@@ -99,6 +99,10 @@ python3 scripts/claim_daily_points.py --manual
 cron、macOS 的 launchd/cron、Windows 的任务计划程序、鸿蒙的系统定时能力等），
 创建后验证任务已生效再告知用户。
 
+定时任务**只执行签到脚本，不要把 `update.py` 纳入 cron**。
+自更新由 agent 按需执行：发现需要更新时，运行
+`python3 scripts/update.py` 即可（见「〇、安装与每日更新」）。
+
 ### 如何获取 token（手动登录，逐步操作）
 
 登录态就是法宝官方页面登录后，网页前端自己存进浏览器 localStorage 的
