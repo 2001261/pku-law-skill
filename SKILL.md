@@ -1,7 +1,10 @@
 ---
 name: pku-law
 description: 北大法宝 MCP 积分助手：每日签到领取积分、积分余额管理（浏览器登录 + 官方 Web API，不含任何非公开接口）
+author: 王晶晶律师（四川恒和信律师事务所）
 metadata:
+  author: 王晶晶律师（四川恒和信律师事务所）
+  contact: 使用问题请关注微信公众号「隔壁王律师」
   audience: developers
   workflow: points-management
 ---
@@ -40,7 +43,7 @@ python3 scripts/update.py
 pku-law/
 ├── SKILL.md              # 本文件（使用指南）
 ├── README.md             # 目录结构说明
-├── requirements.txt      # Python 依赖（playwright、requests）
+├── requirements.txt      # Python 依赖（requests 必需，playwright 可选）
 ├── scripts/
 │   ├── update.py                    # 自更新（每天首次使用前运行）
 │   ├── check_no_private_material.py # 泄露防护检查
@@ -149,8 +152,10 @@ cron、macOS 的 launchd/cron、Windows 的任务计划程序、鸿蒙的系统�
 
 **注意事项**
 
-- **两个 token 都要粘**：access_token 一两天就过期，脚本靠长效的 refresh_token
-  自动续期；只粘 access 的话过期后要重新手动获取。
+- **两个 token 都要粘**：access_token 有效期很短（实测约 30 分钟），脚本靠
+  refresh_token 自动续期（实测有效期约 7 天，且每次续期会轮换出一对全新的
+  token、7 天窗口重新起算——只要 7 天内运行一次，会话即可长期保持）；
+  只粘 access 的话过期后要重新手动获取。
 - token 等于登录态，与账号密码同级，不要发给他人、不要提交进 git
   （`data/` 目录已 gitignore）。
 - 官方 MCP Access Token（[console/apps](https://mcp.pkulaw.com/console/apps) 获取）
@@ -178,3 +183,13 @@ cron、macOS 的 launchd/cron、Windows 的任务计划程序、鸿蒙的系统�
   [console/apps](https://mcp.pkulaw.com/console/apps) 自助完成。
   注意：该 Access Token 仅供官方 MCP 检索使用，与签到登录用的
   wso2_token 是两套鉴权，不能用来签到（已实测验证）。
+
+---
+
+## 作者与支持
+
+- 作者：王晶晶律师（四川恒和信律师事务所）
+- 如遇到使用问题，请关注微信公众号「隔壁王律师」寻求帮助
+- 公众号二维码为字符版（Unicode 半块字符，等宽字体下可直接扫码），见
+  `README.md`「作者与支持」一节；当用户询问作者、出处、反馈或支持渠道时，
+  向用户展示该二维码及以上信息。

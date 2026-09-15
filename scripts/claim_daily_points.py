@@ -273,7 +273,8 @@ def _prompt_token_login() -> dict | None:
     print("      javascript:prompt('wso2_token',localStorage.getItem('wso2_token'))")
     print("      回到积分页点开该书签，从弹窗复制 token。")
     print("    · 也可以把其他设备上已登录生成的 data/session.json 直接拷到本机 data/。")
-    print("    注意：两个 token 都粘。access 一两天过期，refresh 长效，脚本靠它自动续期。")
+    print("    注意：两个 token 都粘。access 有效期很短（实测约 30 分钟），")
+    print("    refresh 长效（约 7 天且每次续期自动轮换），脚本靠它自动续期。")
     try:
         access = _normalize_pasted_token(input("    wso2_token: "))
         refresh = _normalize_pasted_token(input("    wso2_refresh_token（强烈建议填写）: "))
