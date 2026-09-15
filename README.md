@@ -12,7 +12,6 @@ pku-law/
 ├── requirements.txt      # Python 依赖（requests 必需，playwright 可选）
 ├── scripts/
 │   ├── update.py                    # 自更新（每天首次使用前运行）
-│   ├── check_no_private_material.py # 泄露防护检查
 │   └── claim_daily_points.py        # 每日签到领取积分 + 余额查看
 └── data/                 # 登录态（自动生成，gitignore 不入库）
     ├── session.json      #   会话令牌（权限 600，免浏览器复用）
