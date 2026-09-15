@@ -1,6 +1,7 @@
 ---
 name: pku-law
 slug: pku-law
+displayName: 北大法宝积分助手
 version: 1.0.0
 description: 北大法宝 MCP 积分助手：每日签到领取积分、积分余额管理（浏览器登录 + 官方 Web API，不含任何非公开接口）
 author: 王晶晶律师（四川恒和信律师事务所）
