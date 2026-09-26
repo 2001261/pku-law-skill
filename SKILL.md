@@ -2,7 +2,7 @@
 name: pkulaw-mcp-assistant
 slug: pkulaw-mcp-assistant
 displayName: 北大法宝积分助手
-version: 1.1.1
+version: 1.1.2
 description: 北大法宝 MCP 积分助手：每日签到领取积分、积分余额管理（浏览器登录 + 官方 Web API，不含任何非公开接口）
 author: 王晶晶律师（四川恒和信律师事务所）
 metadata:
@@ -117,8 +117,9 @@ python3 scripts/claim_daily_points.py --manual
 2. **沙盒回落**：若 agent 宿主运行在沙盒中（如 macOS 上部分 Agent 宿主
    无权限创建 launchd/cron），回落到**宿主自带的定时任务能力**
    （如 WorkBuddy 定时任务、CLI Agent 内置 cron 等）。此方式宿主不在线则
-   不触发，创建后须向用户说明该限制；并利用接口幂等性在宿主在线期间
-   **多次触发**（如每小时一次）提高补跑命中率，而非只挂 00:00:01 一个点。
+   不触发，创建后须向用户说明该限制；并利用接口幂等性提高补跑命中率。
+   **注意：只创建一条循环任务**（如"每小时执行一次"的单条 recurring 任务），
+   **不要创建多条定时任务**——一条循环任务即可覆盖补跑需求。
 3. 创建后验证任务已生效，并向用户说明所用机制及其补跑语义。
 
 定时任务**只执行签到脚本，不要把 `update.py` 纳入定时任务**。
