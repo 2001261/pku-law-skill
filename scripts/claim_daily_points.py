@@ -23,6 +23,8 @@
     python3 scripts/claim_daily_points.py            # 领取今日积分
     python3 scripts/claim_daily_points.py --status   # 只查看积分余额
     python3 scripts/claim_daily_points.py --login    # 手动粘贴 token 登录（无 Playwright 时）
+    python3 scripts/claim_daily_points.py --login --access-token "eyJ..." --refresh-token "eyJ..."
+                                     # 免交互登录（Agent 宿主无交互终端时用）
     python3 scripts/claim_daily_points.py --headless # 无头模式（需已登录过）
     python3 scripts/claim_daily_points.py --manual   # 只打开页面，完全手动操作（需 Playwright）
 """
@@ -263,25 +265,10 @@ def _normalize_pasted_token(raw: str) -> str | None:
     return raw if raw.startswith("eyJ") else None
 
 
-def _prompt_token_login() -> dict | None:
-    """手动粘贴 token 登录：无 Playwright 环境（如鸿蒙）的登录路径。"""
-    print("[i] 手动登录：粘贴浏览器登录官方页面后保存的 wso2_token。")
-    print("    获取方法（详细图文步骤见 SKILL.md「如何获取 token」）：")
-    print("    · 电脑浏览器：登录 https://mcp.pkulaw.com/console/points ，F12 打开")
-    print("      控制台，执行 copy(localStorage.getItem('wso2_token')) 后粘贴；")
-    print("      wso2_refresh_token 同理（Chrome 首次粘贴需先输入「允许粘贴」）。")
-    print("    · 手机/鸿蒙浏览器（书签法）：登录同一页面后收藏书签，把书签网址改为")
-    print("      javascript:prompt('wso2_token',localStorage.getItem('wso2_token'))")
-    print("      回到积分页点开该书签，从弹窗复制 token。")
-    print("    · 也可以把其他设备上已登录生成的 data/session.json 直接拷到本机 data/。")
-    print("    注意：两个 token 都粘。access 有效期很短（实测约 30 分钟），")
-    print("    refresh 长效（约 7 天且每次续期自动轮换），脚本靠它自动续期。")
-    try:
-        access = _normalize_pasted_token(input("    wso2_token: "))
-        refresh = _normalize_pasted_token(input("    wso2_refresh_token（强烈建议填写）: "))
-    except (EOFError, KeyboardInterrupt):
-        print()
-        return None
+def _token_login(access_raw: str, refresh_raw: str | None) -> dict | None:
+    """用给定的 token 登录（校验有效性，过期则用 refresh 换新），成功返回会话。"""
+    access = _normalize_pasted_token(access_raw)
+    refresh = _normalize_pasted_token(refresh_raw or "")
     if not access:
         print("[✗] access_token 为空或格式不对（应以 eyJ 开头）。")
         return None
@@ -298,6 +285,37 @@ def _prompt_token_login() -> dict | None:
         print(f"[✗] token 无效（{e}），请重新获取后再试。")
         return None
     return sess
+
+
+def _print_token_guide() -> None:
+    """打印 token 获取指引。"""
+    print("[i] 手动登录：粘贴浏览器登录官方页面后保存的 wso2_token。")
+    print("    获取方法（详细图文步骤见 SKILL.md「如何获取 token」）：")
+    print("    · 电脑浏览器：登录 https://mcp.pkulaw.com/console/points ，F12 打开")
+    print("      控制台，执行 copy(localStorage.getItem('wso2_token')) 后粘贴；")
+    print("      wso2_refresh_token 同理（Chrome 首次粘贴需先输入「允许粘贴」）。")
+    print("    · 手机/鸿蒙浏览器（书签法）：登录同一页面后收藏书签，把书签网址改为")
+    print("      javascript:prompt('wso2_token',localStorage.getItem('wso2_token'))")
+    print("      回到积分页点开该书签，从弹窗复制 token。")
+    print("    · 也可以把其他设备上已登录生成的 data/session.json 直接拷到本机 data/。")
+    print("    注意：两个 token 都粘。access 有效期很短（实测约 30 分钟），")
+    print("    refresh 长效（约 7 天且每次续期自动轮换），脚本靠它自动续期。")
+
+
+def _prompt_token_login() -> dict | None:
+    """交互式手动粘贴 token 登录：无 Playwright 环境（如鸿蒙）的登录路径。
+
+    仅适用于真实交互终端；Agent 宿主（如 WorkBuddy）的执行窗没有交互
+    stdin，请改用 --access-token / --refresh-token 参数免交互登录。
+    """
+    _print_token_guide()
+    try:
+        access = input("    wso2_token: ")
+        refresh = input("    wso2_refresh_token（强烈建议填写）: ")
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return None
+    return _token_login(access, refresh)
 
 
 # ── 业务流程 ────────────────────────────────────────────────────
@@ -457,6 +475,10 @@ def main() -> int:
     parser.add_argument("--status", action="store_true", help="只查看积分余额，不执行领取")
     parser.add_argument("--login", action="store_true",
                         help="手动粘贴 token 登录（无需 Playwright，鸿蒙等环境适用）")
+    parser.add_argument("--access-token", metavar="TOKEN",
+                        help="配合 --login：直接传入 wso2_token，免交互（Agent 宿主无交互终端时用）")
+    parser.add_argument("--refresh-token", metavar="TOKEN",
+                        help="配合 --login：直接传入 wso2_refresh_token，免交互")
     args = parser.parse_args()
 
     if args.manual:
@@ -464,7 +486,10 @@ def main() -> int:
 
     # 手动粘贴 token 登录：无 Playwright 环境的登录路径
     if args.login:
-        sess = _prompt_token_login()
+        if args.access_token:
+            sess = _token_login(args.access_token, args.refresh_token)
+        else:
+            sess = _prompt_token_login()
         if not sess:
             return 1
         save_session(sess)

@@ -2,7 +2,7 @@
 name: pkulaw-mcp-assistant
 slug: pkulaw-mcp-assistant
 displayName: 北大法宝积分助手
-version: 1.1.2
+version: 1.1.3
 description: 北大法宝 MCP 积分助手：每日签到领取积分、积分余额管理（浏览器登录 + 官方 Web API，不含任何非公开接口）
 author: 王晶晶律师（四川恒和信律师事务所）
 metadata:
@@ -169,6 +169,20 @@ python3 scripts/claim_daily_points.py --manual
 
 任何一台设备上 `--login` 成功后，登录态就保存在 `data/session.json`。
 直接把这个文件拷到目标设备的 skill `data/` 目录下，效果等同于粘贴登录。
+
+**方法四：Agent 宿主免交互登录（WorkBuddy 等，推荐 Agent 使用）**
+
+Agent 宿主的执行窗往往不是交互终端，`--login` 的输入提示接不到键盘
+（表现为打字、回车无反应）。此时不要硬敲，改走免交互参数：
+
+1. 用户按方法一/二取到两个 token，在对话里发给 agent；
+2. agent 执行：
+   ```bash
+   python3 scripts/claim_daily_points.py --login \
+     --access-token "<wso2_token>" --refresh-token "<wso2_refresh_token>"
+   ```
+   （token 带引号或 JSON 包装均可，脚本自动解析）
+3. 登录成功后会话存入 `data/session.json`，之后运行不再需要任何输入。
 
 **注意事项**
 
